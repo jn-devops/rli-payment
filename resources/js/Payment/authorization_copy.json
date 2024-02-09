@@ -1,0 +1,56 @@
+{
+	"info": {
+		"_postman_id": "c7ff6aa7-32ab-40d8-91a6-841f1ef66a0f",
+		"name": "Authorization Copy",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+		"_exporter_id": "21276745"
+	},
+	"item": [
+		{
+			"name": "Authorization",
+			"request": {
+				"auth": {
+					"type": "basic",
+					"basic": [
+						{
+							"key": "password",
+							"value": "{client secret}",
+							"type": "string"
+						},
+						{
+							"key": "username",
+							"value": "{client id}",
+							"type": "string"
+						}
+					]
+				},
+				"method": "POST",
+				"header": [],
+				"body": {
+					"mode": "formdata",
+					"formdata": [
+						{
+							"key": "grant_type",
+							"value": "client_credentials",
+							"type": "default"
+						}
+					]
+				},
+				"url": {
+					"raw": "https://auth.netbank.ph/oauth2/token",
+					"protocol": "https",
+					"host": [
+						"auth",
+						"netbank",
+						"ph"
+					],
+					"path": [
+						"oauth2",
+						"token"
+					]
+				}
+			},
+			"response": []
+		}
+	]
+}
