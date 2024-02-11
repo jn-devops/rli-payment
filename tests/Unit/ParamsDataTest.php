@@ -3,11 +3,10 @@
 namespace Tests\Unit;
 
 use Illuminate\Foundation\Testing\WithFaker;
+use Illuminate\Support\Arr;
 use App\Classes\Signature;
 use App\Data\ParamsData;
 use Tests\TestCase;
-use Vyuldashev\XmlToArray\XmlToArray;
-use Illuminate\Support\Arr;
 
 class ParamsDataTest extends TestCase
 {
@@ -24,7 +23,7 @@ class ParamsDataTest extends TestCase
         $mch_id = $this->faker->word();
         $nonce_str = generateNonceWithTimestamp();
         $notify_url = $this->faker->url();
-        $out_trade_no = $this->faker->numberBetween(1000000,9000000);
+        $out_trade_no = $this->faker->uuid();
         $service = $this->faker->word();
         $sign_type = $this->faker->word();
         $total_fee = $this->faker->numberBetween(1000,10000);
@@ -65,5 +64,19 @@ XML;
         });
         $this->assertEquals( 'UTF-8', mb_detect_encoding($xmlData, ['UTF-8', 'ASCII']));
         $this->assertEquals($xmlData, $paramsData->xmlToSend());
+    }
+
+    /** @test */
+    public function params_data_has_config_and_mutable_attribs(): void
+    {
+        $config = config('rli-payment.aub_paymate.client');
+        $out_trade_no = $this->faker->uuid();
+        $total_fee = $this->faker->numberBetween(1000,10000);
+        $mch_create_ip = getLocalIpAddress();
+        $nonce_str = generateNonceWithTimestamp();
+        $mutable = compact('out_trade_no', 'total_fee', 'mch_create_ip', 'nonce_str');
+        $attribs = array_merge($config, $mutable);
+        $params_data = ParamsData::from($attribs);
+        $this->assertEmpty(array_diff($params_data->toArray(), $attribs));
     }
 }
