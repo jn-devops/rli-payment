@@ -2,9 +2,9 @@
 
 namespace App\Data;
 
+use Spatie\LaravelData\Attributes\Validation\In;
 use Spatie\ArrayToXml\ArrayToXml;
 use Spatie\LaravelData\Data;
-use Illuminate\Support\Arr;
 use App\Classes\Signature;
 
 class ParamsData extends Data
@@ -18,6 +18,7 @@ class ParamsData extends Data
         public string $notify_url,
         public string $out_trade_no,
         public string $service,
+        #[In('SHA256')]
         public string $sign_type,
         public string $total_fee,
         public string $key,
@@ -27,15 +28,26 @@ class ParamsData extends Data
      * @return string
      * @throws \DOMException
      */
-    public function toXML(): string
+    public function xmlToSend(): string
     {
         $root = [ 'rootElementName' => 'xml' ];
-        $data = $this->toArray();
-        $key = Arr::pull($data, 'key');
-        $data ['sign'] = Signature::create($this)->toString();
-        $arrayToXml = new ArrayToXml($data, $root);
-        $arrayToXml->setDomProperties(['formatOutput' => true]);
 
-        return $arrayToXml->dropXmlDeclaration()->toXml();
+        return with(new ArrayToXml($this->withoutKeyButWithSignatureArray(), $root, true, 'UTF-8'), function ($arrayToXml) {
+            $xml = $arrayToXml
+                ->setDomProperties(['formatOutput' => true])
+                ->dropXmlDeclaration()
+                ->toXml()
+            ;
+
+            return htmlspecialchars_decode($xml);
+        });
+    }
+
+    public function withoutKeyButWithSignatureArray(): array
+    {
+        return tap($this->toArray(), function (&$data) {
+            unset($data['key']);
+            $data += Signature::create($this)->toArray('sign');
+        });
     }
 }

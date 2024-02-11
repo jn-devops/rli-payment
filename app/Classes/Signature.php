@@ -6,6 +6,8 @@ use App\Data\ParamsData;
 
 class Signature
 {
+    const HEX = false;
+
     protected ParamsData $data;
 
     public function __construct(ParamsData $data)
@@ -20,15 +22,15 @@ class Signature
 
     public function toString(): string
     {
-        //process $this->data
+        $sortedParams = http_build_query($this->data->toArray());
 
-        return '537';
+        return strtoupper(hash('sha256', $sortedParams, self::HEX));
     }
 
-    public function toArray($associative = true): array
+    public function toArray($key = 'signature'): array
     {
         $signature = $this->toString();
 
-        return $associative ? compact('signature') : [ $signature ];
+        return [ $key => $signature ];
     }
 }
