@@ -2,6 +2,7 @@
 
 namespace Tests\Feature\Actions;
 
+use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Foundation\Testing\WithFaker;
 use App\Actions\RequestPaymentAction;
@@ -33,7 +34,9 @@ class RequestPaymentActionTest extends TestCase
         $reference_code = substr($this->faker->uuid(), -10);
         $amount = $this->faker->numberBetween(100, 200) * 100; //* 100 is required so there will be no cents
         $attribs = compact('reference_code', 'amount');
-        $response = $this->postJson(route('pay-amount'), $attribs);
+        $user = User::factory()->create();
+        $token = $user->createToken('pipe-dream', ['collect-payment'])->plainTextToken;
+        $response = $this->withHeaders(['Authorization'=>'Bearer '.$token])->postJson(route('collect-payment'), $attribs);
         $response->assertStatus(200);
         $response->assertContent(json_encode($attribs));
     }

@@ -18,5 +18,6 @@ Route::middleware('auth:sanctum')->get('/user', function (Request $request) {
     return $request->user();
 });
 
-Route::post('/pay', \App\Actions\RequestPaymentAction::class)
-    ->name('pay-amount');
+Route::post('/collect', \App\Actions\RequestPaymentAction::class)
+    ->middleware(['auth:sanctum', 'ability:collect-payment'])
+    ->name('collect-payment');
