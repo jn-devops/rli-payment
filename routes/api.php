@@ -18,5 +18,5 @@ Route::middleware('auth:sanctum')->get('/user', function (Request $request) {
     return $request->user();
 });
 
-Route::post('/pay', \App\Actions\PayAmountAction::class)
+Route::post('/pay', \App\Actions\RequestPaymentAction::class)
     ->name('pay-amount');

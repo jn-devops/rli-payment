@@ -12,7 +12,10 @@ return [
             'notify_url' => env('RLI_PAYMENT_NOTIFY_URL'),
             'service' => env('RLI_PAYMENT_SERVICE'),
             'sign_type' => env('RLI_PAYMENT_SIGN_TYPE'),
+        ],
+        'api' => [
             'key' => env('RLI_PAYMENT_KEY'),
         ],
-    ]
+    ],
+    'webhook' => env('RLI_PAYMENT_WEBHOOK'),
 ];

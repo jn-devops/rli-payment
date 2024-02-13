@@ -32,22 +32,25 @@ class ParamsData extends Data
     {
         $root = [ 'rootElementName' => 'xml' ];
 
-        return with(new ArrayToXml($this->withoutKeyButWithSignatureArray(), $root, true, 'UTF-8'), function ($arrayToXml) {
-            $xml = $arrayToXml
-                ->setDomProperties(['formatOutput' => true])
+        return with(new ArrayToXml($this->withoutKeyButWithUppercaseSignatureArray(), $root, true, 'UTF-8'), function ($arrayToXml) {
+            return $arrayToXml
+//                ->setDomProperties(['formatOutput' => true])
                 ->dropXmlDeclaration()
                 ->toXml()
             ;
-
-            return htmlspecialchars_decode($xml);
         });
     }
 
-    public function withoutKeyButWithSignatureArray(): array
+    public function withoutKeyButWithUppercaseSignatureArray(): array
     {
         return tap($this->toArray(), function (&$data) {
             unset($data['key']);
             $data += Signature::create($this)->toArray('sign');
         });
+    }
+
+    public function toQuery(): string
+    {
+        return urldecode(http_build_query($this->toArray()));
     }
 }
