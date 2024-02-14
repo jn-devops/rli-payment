@@ -2,73 +2,66 @@
 
 namespace App\Actions;
 
-use App\Notifications\SendInvoiceNotification;
-use Illuminate\Support\Facades\Notification;
 use Lorisleiva\Actions\Concerns\AsAction;
 use Illuminate\Support\Facades\Validator;
 use Lorisleiva\Actions\ActionRequest;
-use Mtownsend\XmlToArray\XmlToArray;
+use App\Interfaces\PaymentGateway;
 use App\Events\PaymentRequested;
 use Illuminate\Support\Arr;
 use App\Data\ResponseData;
-use App\Data\ParamsData;
-use GuzzleHttp\Client;
 use Brick\Money\Money;
-use NotificationChannels\Webhook\WebhookChannel;
-use App\Models\User;
 
 class RequestPaymentAction
 {
     use AsAction;
 
-    protected function pay($reference_code, Money $amount): bool
+    /**
+     * @param PaymentGateway $gateway
+     */
+    public function __construct(public PaymentGateway $gateway){}
+
+    /**
+     * @param string $reference_code
+     * @param Money $amount
+     * @return ResponseData|bool
+     */
+    protected function collect(string $reference_code, Money $amount): ResponseData|bool
     {
-        $config = config('rli-payment.aub_paymate.client');
-
-        $out_trade_no = $reference_code;
-        $total_fee = $amount->getAmount()->toInt();
-        $mch_create_ip = getLocalIpAddress();//165.22.109.29
-        $nonce_str = generateNonceWithTimestamp();
-
-        $mutable = compact('out_trade_no', 'total_fee', 'mch_create_ip', 'nonce_str');
-        $attribs = array_merge($config, $mutable);
-        ksort($attribs);
-        $attribs['key'] = config('rli-payment.aub_paymate.api.key');
-        $paramsData = ParamsData::from($attribs);
-
-        $url = config('rli-payment.aub_paymate.server.api_url');
-        $xml =  $paramsData->xmlToSend();
-
-        $client = new Client();
-        $response = $client->request('POST', $url, [
-            'headers' => [
-                'Content-Type' => 'text/xml'
-            ],
-            'body'   => $xml
-        ]);
-        $array = XmlToArray::convert($response->getBody()->getContents());
-
-        $responseData = ResponseData::from(array_merge(['reference_code' => $reference_code], $array));
-
-        if ($response->getStatusCode() == 200) {
+        $responseData = false;
+        try {
+            $responseData =  $this->gateway
+                ->setReferenceCode($reference_code)
+                ->setAmount($amount)
+                ->send()
+            ;
             PaymentRequested::dispatch($responseData);
 
-            return true;
+        } catch (\Exception $exception) {
+            //TODO: process error here
         }
-        else {
-            return false;
-        }
+
+        return $responseData;
     }
 
-    public function handle(array $attribs): bool
+    /**
+     * @param array $attribs
+     * @return ResponseData|bool
+     * @throws \Brick\Math\Exception\NumberFormatException
+     * @throws \Brick\Math\Exception\RoundingNecessaryException
+     * @throws \Brick\Money\Exception\UnknownCurrencyException
+     */
+    public function handle(array $attribs): ResponseData|bool
     {
         $validated = Validator::validate($attribs, $this->rules());
         $reference_code = Arr::get($validated, 'reference_code');
         $amount = Money::ofMinor(Arr::get($validated, 'amount'), 'PHP');
 
-        return $this->pay($reference_code, $amount);
+        return $this->collect($reference_code, $amount);
     }
 
+    /**
+     * @return array[]
+     */
     public function rules(): array
     {
         return [
@@ -77,11 +70,21 @@ class RequestPaymentAction
         ];
     }
 
+    /**
+     * @param ActionRequest $request
+     * @return \Illuminate\Http\JsonResponse
+     * @throws \Brick\Math\Exception\MathException
+     * @throws \Brick\Math\Exception\NumberFormatException
+     * @throws \Brick\Math\Exception\RoundingNecessaryException
+     * @throws \Brick\Money\Exception\UnknownCurrencyException
+     * @throws \DOMException
+     * @throws \GuzzleHttp\Exception\GuzzleException
+     */
     public function asController(ActionRequest $request): \Illuminate\Http\JsonResponse
     {
         $validated = $request->validated();
-        $this->handle($validated);
+        $responseData = $this->handle($validated);
 
-        return response()->json(Arr::only($validated, ['reference_code', 'amount']));
+        return response()->json($responseData ? $responseData->toArray() : $responseData);
     }
 }

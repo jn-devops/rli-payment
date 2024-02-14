@@ -3,9 +3,9 @@
 namespace App\Data;
 
 use Spatie\LaravelData\Attributes\Validation\In;
+use App\Classes\{AUBPaymate, Signature};
 use Spatie\ArrayToXml\ArrayToXml;
 use Spatie\LaravelData\Data;
-use App\Classes\Signature;
 
 class ParamsData extends Data
 {
@@ -23,6 +23,11 @@ class ParamsData extends Data
         public string $total_fee,
         public string $key,
     ) {}
+
+    public static function fromAUBPaymate(AUBPaymate $gateway): self
+    {
+        return self::from($gateway->getAttribs());
+    }
 
     /**
      * @return string
