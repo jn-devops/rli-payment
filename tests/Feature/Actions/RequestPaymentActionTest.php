@@ -70,7 +70,7 @@ class RequestPaymentActionTest extends TestCase
             version: $this->faker->word()
         ); //TODO: mock this
         $user = User::factory()->create();
-        $token = $user->createToken('pipe-dream', ['collect-payment'])->plainTextToken;
+        $token = $user->createToken('pipe-dream', ['collect:wallet'])->plainTextToken;
         $response = $this->withHeaders(['Authorization'=>'Bearer '.$token])->postJson(route('collect-payment'), $this->attribs);
         $response->assertStatus(200);
         $response->assertJsonFragment(['reference_code' => $this->attribs['reference_code'], 'sign_type' => 'SHA256', 'status' => '0']);

@@ -31,13 +31,13 @@ class JetstreamServiceProvider extends ServiceProvider
      */
     protected function configurePermissions(): void
     {
-        Jetstream::defaultApiTokenPermissions(['read']);
+        Jetstream::defaultApiTokenPermissions(['collect:wallet']);
 
         Jetstream::permissions([
-            'create',
-            'read',
-            'update',
-            'delete',
+            'collect:wallet',
+            'collect:card',
+            'disburse:wallet',
+            'disburse:card',
         ]);
     }
 }
