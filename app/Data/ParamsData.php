@@ -12,6 +12,7 @@ class ParamsData extends Data
     public function __construct(
         public string $body,
         public string $device_info,
+        public string $expiration_date,
         public string $mch_create_ip,
         public string $mch_id,
         public string $nonce_str,

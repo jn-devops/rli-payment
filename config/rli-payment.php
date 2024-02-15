@@ -18,4 +18,5 @@ return [
         ],
     ],
     'webhook' => env('RLI_PAYMENT_WEBHOOK'),
+    'expires_in' => env('RLI_PAYMENT_EXPIRES_IN', 7) //days
 ];
