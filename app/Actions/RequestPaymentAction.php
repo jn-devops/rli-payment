@@ -55,7 +55,7 @@ class RequestPaymentAction
         $validated = Validator::validate($attribs, $this->rules());
         $reference_code = Arr::get($validated, 'reference_code');
         $amount = Money::of(Arr::get($validated, 'amount'), 'PHP'); //change from ofMinor
-        $amount->multipliedBy('100');//added to include decimal
+        $amount = $amount->multipliedBy('100');//added to include decimal
         return $this->collect($reference_code, $amount);
     }
 
@@ -66,7 +66,7 @@ class RequestPaymentAction
     {
         return [
             'reference_code' => ['required', 'string', 'min:2'],
-            'amount' => ['required', 'integer', 'min:10000', 'max:20000'],
+            'amount' => ['required', 'integer', 'min:50', 'max:20000'], //change min from 10000 to 50
         ];
     }
 
