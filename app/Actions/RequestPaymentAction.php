@@ -66,7 +66,7 @@ class RequestPaymentAction
     {
         return [
             'reference_code' => ['required', 'string', 'min:2'],
-            'amount' => ['required', 'integer', 'min:50', 'max:20000'], //change min from 10000 to 50
+            'amount' => ['required', 'integer', 'min:1', 'max:20000'], //change min from 10000 to 50
         ];
     }
 
